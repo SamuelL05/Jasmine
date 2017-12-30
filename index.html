@@ -1,0 +1,199 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jasmine Tests</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.6.2/jasmine.css">
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.6.2/jasmine.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.6.2/jasmine-html.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.6.2/boot.js"></script>
+  <script
+  src="http://code.jquery.com/jquery-3.2.1.js"
+  integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+  crossorigin="anonymous"></script>
+  <script>
+
+        // TDD - Test Driven Development (Red-Green-Refactor Methodology)
+        // Instead of writing source code first when in the developmental
+        // stages of production. You instead write test's first.
+        // Run the tests, and see that they all fail, then write the
+        // neccessary source code to pass the tests. After successfully
+        // passing a test, refactor the code as neccessary. As long as the code
+        // is still passing after the refactor, progress to the next test.
+
+        // BDD - Behavior Driven Development
+        // Jasmine is a subset of TDD known as BDD
+
+        // Integration testing
+        // Though through the use of TDD the individual parts of an application
+        // function correctly, the parts working together may break code. This
+        // is where Integration testing is useful.
+
+        // Acceptance testing
+        // involves the testing of an application as a whole; post developmental stage.
+
+        // Stress Testing
+        // Testing an application working under infavorable circumstances, such as high traffic
+        // or a server going down.
+
+      var earth = {
+          isRound: true,
+          numberFromSun: 3
+      };
+
+      // describe tests can also be nested inside of
+      // one another when dealing with broad categories
+      // to narrow down individual tests
+      describe("Earth", function() {
+          it("is round", function() {
+              // It is common to see multiple expect blocks inside of a 
+              // describe function. However, ensure that when placing
+              // mutiple expect's that they are related.
+              expect(earth.isRound).toBe(true)
+          });
+          it("is the third planet from the sun", function() {
+              expect(earth.numberFromSun).toBe(3);
+          });
+      }); 
+
+      // Matchers that can be used in Jasmine:
+      // .toBe / not.toBe
+      // toBeCloseTo
+      // toBeDefined (is object defined?)
+      // toBeFalsy / toBeTruthy
+      // toBeGreaterThan / toBeLessThan
+      // toContain (Does object contain)
+      // toEqual (equivelant to "=="")
+      
+      // beforeEach promotes code reuse by preventing the need
+      // to redefine variables inside of each "it" function.
+      // There is also afterEach, beforeAll, afterAll to help
+      // achieve cleaner code. These are called "hooks".
+      describe("Push", function() {
+          var arr;
+          beforeEach(function() {
+              arr = [1,2,3,4];
+          });
+          // x can be placed infront of it "xit" to omit a test
+          // from the describe test.
+          it("Adds elements to an array", function() {
+              arr.push(5);
+              expect(arr).toEqual([1,2,3,4,5]);
+          });
+          it("Returns the length of the array", function() {
+              // array.push returns the length of an array
+              expect(arr.push(5)).toBe(5);
+          });
+          it("Adds anything to an array", function() {
+              expect(arr.push({})).toBe(5);
+          });
+      });
+
+      // afterEach can be used to reset values after each
+      // function test. Syntactically similar to beforeEach.
+      // referred to as a "teardown"
+
+      // beforeAll will share whatever values are defined inside
+      // of the beforeAll function. Syntactically similar to beforeEach.
+
+      // Spies - Test double functions.
+      // A spy can stub(mimic) any function and track calls to it and
+      // all arguments.
+      // Spies only exist in the describe or it block in which it is defined.
+      // Spies are removed after each spec.
+
+      function add(a,b,c) {
+          return a+b+c;
+      }
+
+      // Spies are useful when dealing with resource intensive operations, due
+      // to their "faking" of the behavior of said function.
+      describe("add", function() {
+          var addSpy, result;
+          beforeEach(function() {
+              addSpy = spyOn(window, 'add').and.callThrough();
+              result = addSpy(1,2,3);
+          })
+          it("is can have params tested", function() {
+              expect(addSpy).toHaveBeenCalled();
+              expect(addSpy).toHaveBeenCalledWith(1,2,3);
+              // Checks to see if add was called exactly one time
+              expect(addSpy.calls.count()).toBe(1);
+              expect(result).toEqual(6);
+          });
+      });
+
+      // Clocks - useful for testing time dependant code.
+      // Installed by invoking jasmine.clock().install().
+      // Ensure to uninstall the clock after each spec.
+
+      describe("A simple setTimeout", function() {
+          var sample;
+          beforeEach(function() {
+              sample = jasmine.createSpy("sampleFunction");
+              jasmine.clock().install();
+          });
+
+          afterEach(function() {
+              jasmine.clock().uninstall();
+          });
+
+          it("is only invoked after 1000ms", function() {
+              setTimeout(function() {
+                  sample();
+              }, 1000);
+              jasmine.clock().tick(999);
+              expect(sample).not.toHaveBeenCalled();
+              jasmine.clock().tick(1);
+              expect(sample).toHaveBeenCalled();
+          });
+      });
+
+      describe("A simple setInterval", function() {
+          var dummyFunction;
+
+          beforeEach(function() {
+              dummyFunction = jasmine.createSpy("dummyFunction");
+              jasmine.clock().install();
+          });
+
+          afterEach(function() {
+              jasmine.clock().uninstall();
+          });
+
+          it("Checks to see the number of times the function is invoked", function() {
+              setInterval(function() {
+                  dummyFunction();
+              }, 1000);
+              jasmine.clock().tick(999);
+              expect(dummyFunction.calls.count()).toBe(0);
+              jasmine.clock().tick(1000);
+              expect(dummyFunction.calls.count()).toBe(1);
+              jasmine.clock().tick(1);
+              expect(dummyFunction.calls.count()).toBe(2);
+          });
+      });
+
+      // Testing Async code
+      // beforeAll, afterAll, beforeEach, afterEach, takes an optional
+      // single function argument (commonly called 'done') that should be called
+      // when the async work is complete.
+      // A test will not complete until its 'done' is called.
+
+      function getUserInfo(username) {
+          return $.getJSON('https://api.github.com/users/' + username);
+      }
+
+      describe("#getUserInfo", function() {
+          it("returns the correct name for the user", function(done) {
+              getUserInfo("elie").then(function(data) {
+              expect(data.name).toBe("Elie Schoppik")
+              done();
+              });
+          });
+      });
+
+  </script>
+</body>
+</html>
